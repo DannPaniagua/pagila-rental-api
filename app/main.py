@@ -10,7 +10,7 @@ class RentalData(BaseModel):
     inventory_id: int
     staff_id: int
 
-DATABASE_URL = "postgresql+psycopg2://postgres:postgres@localhost:434/pagila"
+DATABASE_URL = "postgresql+psycopg2://postgres:postgres@127.0.0.1:5434/pagila"
 
 engine = create_engine(DATABASE_URL, isolation_level="READ COMMITTED")
 
@@ -50,18 +50,6 @@ def create_rental(rental: RentalData):
                     }).scalar()
                     
                     return {"mensaje": "Renta creada exitosamente", "rental_id": nuevo_rental_id}
-
-        except HTTPException:
-            raise
-        except SQLAlchemyError as e:
-            error_code = getattr(e.orig, "pgcode", None) if hasattr(e, "orig") else None
-            if error_code in ("40001", "40P01") and attempt < MAX_RETRIES - 1:
-                time.sleep(BASE_BACKOFF * (2 ** attempt))
-                continue
-            raise HTTPException(status_code=500, detail=f"Error de base de datos: {str(e)}")
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
-
 
         except HTTPException:
             raise
